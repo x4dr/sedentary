@@ -1,21 +1,32 @@
-drop table if exists user;
-create table user (
-  user_id integer primary key autoincrement,
-  username text not null,
-  email text not null,
-  pw_hash text not null
+CREATE TABLE IF NOT EXISTS user (
+  user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL COLLATE NOCASE,
+  email TEXT NOT NULL,
+  pw_hash TEXT NOT NULL
 );
 
-drop table if exists follower;
-create table follower (
-  who_id integer,
-  whom_id integer
+CREATE TABLE IF NOT EXISTS inventory (
+  user_id INTEGER,
+  money INTEGER DEFAULT 0,
+  experience INTEGER DEFAULT 0,
+  blob TEXT DEFAULT '',
+  FOREIGN KEY(user_id) REFERENCES user(user_id),
+  UNIQUE(user_id)
 );
 
-drop table if exists message;
-create table message (
-  message_id integer primary key autoincrement,
-  author_id integer not null,
-  text text not null,
-  pub_date integer
+
+CREATE TABLE IF NOT EXISTS timeouts (
+  user_id INTEGER,
+  timeout_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL,
+  blob TEXT NOT NULL,
+  finished_date INTEGER NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES user(user_id)
 );
+
+CREATE TABLE IF NOT EXISTS skills (
+  user_id INTEGER,
+  blob TEXT NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES user(user_id)
+);
+

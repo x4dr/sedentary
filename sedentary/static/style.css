@@ -124,7 +124,7 @@ div.page ul.messages li small {
     color: #888;
 }
 
-div.page div.twitbox {
+div.page div.sedbox {
     margin: 10px 0;
     padding: 5px;
     background: #F0FAF9;
@@ -133,21 +133,21 @@ div.page div.twitbox {
     -webkit-border-radius: 5px;
 }
 
-div.page div.twitbox h3 {
+div.page div.sedbox h3 {
     margin: 0;
     font-size: 1em;
     color: #2C7E76;
 }
 
-div.page div.twitbox p {
+div.page div.sedbox p {
     margin: 0;
 }
 
-div.page div.twitbox input[type="text"] {
+div.page div.sedbox input[type="text"] {
     width: 585px;
 }
 
-div.page div.twitbox input[type="submit"] {
+div.page div.sedbox input[type="submit"] {
     width: 70px;
     margin-left: 5px;
 }

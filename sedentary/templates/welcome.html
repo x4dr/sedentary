@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block title %}
+  Welcome To Sedentary!
+{% endblock %}
+{% block body %}
+  <h2>{{ self.title() }}</h2>
+
+Sedentary is a thing that is currently not even a thing yet.<br>
+ <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
+{% endblock %}

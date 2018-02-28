@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block title %}
+    Sedentary Home
+{% endblock %}
+{% block head %}
+    <script type="text/javascript" src="{{ url_for('static', filename='countdown.js') }}"></script>
+    <script>
+        function startcountdowns() {
+            {% for w in work -%}
+                {%- if w.finished_date > 0 -%}
+                    countdownIn({{w.finished_date}}, document.getElementById("counter{{ loop.index }}"));
+                {% endif -%}
+            {%- endfor -%}
+        }
+        window.onload=startcountdowns;
+    </script>
+
+{% endblock %}
+{% block body %}
+    <h2>{{ self.title() }}</h2>
+    {% if g.user and stats%}
+
+        <table>
+            <thead>
+            <tr>
+                <th> Stat </th>
+                <th> Current value </th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <td>Gold</td>
+                <td>{{ stats.money }}</td>
+            </tr>
+            <tr>
+                <td>XP</td>
+                <td>{{ stats.experience }}</td>
+            </tr>
+            </tfoot>
+        </table>
+        {% for w in work %}
+            Task {{ w.type }}
+            {% if w.finished_date > 0 %}
+                <p id="counter{{ loop.index }}"></p><br>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+        <a href="{{ url_for('work') }}">work</a>
+{% endblock %}
