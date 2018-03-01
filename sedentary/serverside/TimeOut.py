@@ -1,6 +1,5 @@
 class TimeOut:
     def __init__(self, row, finished_date=None, rewards=None, text=None, user_id=None, timeout_id=None):
-        print("finished is" + str(finished_date))
         if finished_date is None:
             rewards = row['blob'].split("%%%%%")
             text = rewards[1]
@@ -22,5 +21,4 @@ class TimeOut:
         return [self.User_id, self.Timeout_id, self.Type, blob, self.FinishedDate]
 
     def __str__(self):
-        print(self.Text, self.Rewards)
         return self.Text.format(**self.Rewards)

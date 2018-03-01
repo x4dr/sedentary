@@ -17,7 +17,7 @@ from flask import Flask, request, session, url_for, redirect, \
 from werkzeug import check_password_hash, generate_password_hash
 
 # configuration
-DATABASE = './sedentary.db'
+DATABASE = './sedentary/sedentary.db'
 PER_PAGE = 30
 DEBUG = True
 SECRET_KEY = b'_5#y2L"F4Q8z\n\xec]/'
@@ -59,7 +59,8 @@ def init_db():
 def initdb_command():
     """Creates the database tables."""
     init_db()
-    print('Initialized the database.')
+    print("database initialized")
+    
 
 
 def query_db(query: str, args=(), one: bool = False):
@@ -111,7 +112,7 @@ def homepage():
                          [session['user_id']], one=True)
     timeout = query_db('SELECT * FROM timeouts WHERE user_id = ? AND finished_date != 0',
                        [session['user_id']])
-    print([t for t in timeout], inventory)
+    
     return render_template('homepage.html', stats=inventory, work=timeout)
 
 
@@ -135,13 +136,13 @@ def loot(rewards):
     inventory = query_db("SELECT * FROM inventory WHERE user_id = ?",
                          [session['user_id']], one=True)
     inventory = dict(inventory) if inventory else {}
-    print(inventory)
+    
     inventory = {"money": inventory.get('money', 0),
                  "experience": inventory.get('experience', 0),
                  "blob": inventory.get('blob', "")}
     inventory['money'] = str(int(inventory['money']) + int(rewards.get("money", 0)))
     inventory['experience'] = str(int(inventory['experience']) + int(rewards.get("experience", 0)))
-    print(inventory['blob'])
+    
     blob = {l.split(":")[0]: l.split(":")[1] for l in inventory['blob'].split("\n")}
     for k in rewards.keys():
         blob[k] = str(int(rewards[k]) + int(blob.get(k, "0")))
@@ -161,9 +162,9 @@ def work():
                         [session['user_id']])
     db = get_db()
     for timeout in timeouts:
-        print(list(timeout))
+        
         timeout = TimeOut(timeout)
-        print(timeout.FinishedDate)
+        
         if int(time.time()) > timeout.FinishedDate > 0:  # 0 means finished
             if "work" in timeout.Type:
                 flash("you earned:\n" + str(timeout))
@@ -190,14 +191,14 @@ def login():
     if g.user:
         return redirect(url_for('homepage'))
     error = None
-    print(request.form)
+    
     if request.method == 'POST':
         user = query_db('''SELECT * FROM user WHERE
             username = ?''', [request.form['username']], one=True)
         if user is None:
             error = 'Invalid username'
         elif not check_password_hash(user['pw_hash'],
-                                     request.form['password']):
+                                     user['email']+request.form['password']):
             error = 'Invalid password'
         else:
             flash('You were logged in')
@@ -229,7 +230,7 @@ def register():
             db.execute('''INSERT INTO user (
               username, email, pw_hash) VALUES (?, ?, ?)''',
                        [request.form['username'], request.form['email'],
-                        generate_password_hash(request.form['password'])])
+                        generate_password_hash(request.form['email']+request.form['password'])])
             db.commit()
             flash('You were successfully registered and can login now')
             return redirect(url_for('login'))
