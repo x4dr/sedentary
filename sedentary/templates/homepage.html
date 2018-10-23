@@ -7,8 +7,8 @@
     <script>
         function startcountdowns() {
             {% for w in work -%}
-                {%- if w.finished_date > 0 -%}
-                    countdownIn({{w.finished_date}}, document.getElementById("counter{{ loop.index }}"));
+                {%- if w.FinishedDate > 0 -%}
+                    countdownIn({{w.FinishedDate}}, document.getElementById("counter{{ loop.index }}"));
                 {% endif -%}
             {%- endfor -%}
         }
@@ -28,22 +28,27 @@
             </tr>
             </thead>
             <tfoot>
+            {% for name, stat in stats.items() %}
             <tr>
-                <td>Gold</td>
-                <td>{{ stats.money }}</td>
+                <td>{{ name }}</td>
+                <td>{{ stat }}</td>
             </tr>
-            <tr>
-                <td>XP</td>
-                <td>{{ stats.experience }}</td>
-            </tr>
+            {% endfor %}
             </tfoot>
         </table>
+        <br/>
         {% for w in work %}
-            Task {{ w.type }}
-            {% if w.finished_date > 0 %}
+            Task {{ w.Type }}
+            {% if w.FinishedDate > 0 %}
                 <p id="counter{{ loop.index }}"></p><br>
             {% endif %}
         {% endfor %}
     {% endif %}
-        <a href="{{ url_for('work') }}">work</a>
+        <a href="{{ url_for('work') }}">collect</a><br/>
+        <a href="{{ url_for('startwork', x='labour') }}">labour</a><br/>
+        <a href="{{ url_for('startwork', x='woodcutting') }}">woodcutting</a><br/>
+        <a href="{{ url_for('startwork', x='mining') }}">mining</a><br/>
+        <a href="{{ url_for('startwork', x='buy_woodaxe_1') }}">buy an axe for 100 g!</a><br/>
+        <a href="{{ url_for('startwork', x='mining') }}">mining</a><br/>
+        <a href="{{ url_for('startwork', x='mining') }}">mining</a><br/>
 {% endblock %}

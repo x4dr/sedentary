@@ -14,6 +14,19 @@ CREATE TABLE IF NOT EXISTS inventory (
   UNIQUE(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS Tasks (
+  Time_Offset INTEGER,
+  Time_Rand INTEGER,
+  Rewards TEXT,
+  Reward_Text TEXT,
+  Conditions TEXT,
+  Costs TEXT,
+  Menu_Entry TEXT,
+  Flash_Text TEXT,
+  Tags TEXT,
+  UNIQUE(Menu_Entry)
+);
+
 
 CREATE TABLE IF NOT EXISTS timeouts (
   user_id INTEGER,
