@@ -34,8 +34,9 @@ class Market(object):
     def __repr__(self):
         return self.Name
 
-    def price(self, good: str):
-        store = self.Storage.get(good, None)
+    def price(self, good: str, buyprice=False):
+        store = self.Storage.get(good, None)[:]
+        store[0] -= 1 if buyprice else 0
         if store is not None:
             if store[0] == 0:
                 return store[1] * 150
@@ -48,27 +49,29 @@ class Market(object):
     def handle_transaction(self, transaction=None, price=None, buying=None):
         if transaction:
             if buying:
-                print(f"{self.Name} is buying {transaction.Name} "
-                      f"from {transaction.Owner} "
-                      f"for {price}")
+                # print(f"{self.Name} is buying {transaction.Name} "
+                #      f"from {transaction.Owner} "
+                #      f"for {price}")
                 self.Funds -= price
-                newstore = self.Storage.get(transaction.Name, [0, 0])
+                newstore = self.Storage.get(transaction.Name, [0, 0])[:]
                 newstore[0] += 1
                 self.Storage[transaction.Name] = newstore
-                print(f"bringing storage to {self.Storage[transaction.Name][0]}/{self.Storage[transaction.Name][1]} "
-                      f"and funds to {self.Funds}.")
+                # print(f"bringing storage to {self.Storage[transaction.Name][0]}/{self.Storage[transaction.Name][1]} "
+                #      f"and funds to {self.Funds}.")
             else:
-                print(f"{self.Name} is selling {transaction.Name} "
-                      f"to {transaction.Owner} "
-                      f"for {price}")
-                self.Funds += price
-                newstore = self.Storage.get(transaction.Name, [0, 0])
+                # print(f"{self.Name} is selling {transaction.Name} "
+                #      f"to {transaction.Owner} "
+                #      f"for {price}")
+                newstore = self.Storage.get(transaction.Name, [0, 0])[:]
                 newstore[0] -= 1
                 if newstore[0] < 0:
-                    raise Exception(f"sold nonexistant good: {transaction.Name}")
+                    return False
+                self.Funds += price
                 self.Storage[transaction.Name] = newstore
-                print(f"bringing storage to {self.Storage[transaction.Name][0]}/{self.Storage[transaction.Name][1]} "
-                      f"and funds to {self.Funds}.")
+                # print(f"bringing storage to {self.Storage[transaction.Name][0]}/{self.Storage[transaction.Name][1]} "
+                #      f"and funds to {self.Funds}.")
+            return True
+        return False
 
     @staticmethod
     def cull(l):
@@ -80,15 +83,14 @@ class Market(object):
         self.cull(self.Buy_Offers)
 
         for k in self.Storage.keys():
-            p = self.price(k)
             # print(f"{k}: {self.Storage[k][0]}/{self.Storage[k][1]} = {p}")
             if self.Storage[k][0] + 0 < self.Storage[k][1]:
-                print(f"{self.Name} trying to buy {k} at {p}")
-                if self.buy(Transaction(k, p, self, lambda x, y: self.handle_transaction(x, y, True))):
+                #   print(f"{self.Name} trying to buy {k} at {p}")
+                if self.buy(Transaction(k, self.price(g,True), self, lambda x, y: self.handle_transaction(x, y, True))):
                     print("success")
             elif self.Storage[k][0] - 0 > self.Storage[k][1]:
-                print(f"{self.Name} trying to sell {k} at {p}")
-                if self.sell(Transaction(k, p, self, lambda x, y: self.handle_transaction(x, y, False))):
+                #   print(f"{self.Name} trying to sell {k} at {p}")
+                if self.sell(Transaction(k, self.price(g,False), self, lambda x, y: self.handle_transaction(x, y, False))):
                     print("success")
         self.profiteer()
 
@@ -127,7 +129,7 @@ class Market(object):
     def buy(self, offer: Union[Transaction, Tuple[str, Market]], instant=False):
         if not isinstance(offer, Transaction):
             return self.buy(
-                Transaction(offer[0], self.price(offer[0]), offer[1],
+                Transaction(offer[0], self.price(offer[0],True), offer[1],
                             lambda x, y: offer[1].handle_transaction(x, y, True)), True)
         fill_order = min([x for x in self.Sell_Offers
                           if x.Name == offer.Name
@@ -136,19 +138,19 @@ class Market(object):
                          key=lambda x: x.Price, default=Transaction.empty())
         if fill_order.Owner and (fill_order.Owner is not None):
             self.Sell_Offers.remove(fill_order)
-            fill_order.Callback(offer, fill_order.Price)
-            offer.Callback(fill_order, fill_order.Price)
+            if fill_order.Callback(offer, fill_order.Price):
+                offer.Callback(fill_order, fill_order.Price)
             self.provision()
-            return True
+            return offer.Price
         else:
             if not instant:
                 self.Buy_Offers.append(offer)
-            elif self.price(offer.Name) == offer.Price:
-                self.handle_transaction(offer, offer.Price, False)
-                offer.Callback(Transaction(offer.Name, offer.Price, self, None), offer.Price)
-                return True
+            elif self.price(offer.Name,True) == offer.Price:
+                return offer.Price if \
+                    self.handle_transaction(offer, offer.Price, False) and \
+                    offer.Callback(Transaction(offer.Name, offer.Price, self, None), offer.Price) else 0
 
-            return False
+            return 0
 
     def sell(self, offer: Union[Transaction, Tuple[str, Market]], instant=False):
         if not isinstance(offer, Transaction):
@@ -162,27 +164,28 @@ class Market(object):
                          key=lambda x: x.Price, default=Transaction.empty())
         if fill_order.Owner and (fill_order.Owner is not None):
             self.Buy_Offers.remove(fill_order)
-            fill_order.Callback(offer, fill_order.Price)
-            offer.Callback(fill_order, fill_order.Price)
-            self.provision()
-            print()
-            return True
+            if fill_order.Callback(offer, fill_order.Price):
+                offer.Callback(fill_order, fill_order.Price)
+                self.provision()
+                return offer.Price
         else:
             if not instant:
                 self.Sell_Offers.append(offer)
             elif self.price(offer.Name) == offer.Price:
-                self.handle_transaction(offer, offer.Price, True)
-                offer.Callback(Transaction(offer.Name, offer.Price, self, None), offer.Price)
-                return True
+                return offer.Price if \
+                    self.handle_transaction(offer, offer.Price, True) and \
+                    offer.Callback(Transaction(offer.Name, offer.Price, self, None), offer.Price) else 0
 
-            return False
+            return 0
 
 
 sut = Market("Market", [], [], {"Food": [1000, 1000],
-                                "Work": [1000, 1000]
+                                "Work": [1000, 1000],
+                                "Iron": [1000, 1000]
                                 })
 pop = Market("Population", [], [], {"Food": [1000, 1000],
-                                    "Work": [1000, 1000]
+                                    "Work": [1000, 1000],
+                                    "Iron": [1000, 1000]
                                     })
 
 funds = {x: [0] for x in [sut, pop]}
@@ -199,30 +202,40 @@ i = 0
 popsize = 10
 farmsize = 0
 
-while i < 250:
+while i < 25:
     i += 1
     print("day", i)
-    sut.provision()
-    curpop = 0
-    starvation = 0
+    bought = 0
+    sold = 0
+    fed = 0
+    b= []
     for x in range(int(popsize)):
-        sut.buy(("Food", pop))
-        sut.sell(("Work", pop))
-    #popsize += 1 if (sut.price("Work") + 1) >= sut.price("Food") else -1
+        b.append(sut.buy(("Food", pop)))
+        if b[-1]:
+            fed += 1
+            bought += b[-1]
+            sold += sut.sell(("Work", pop))
+    net = sold - bought
+    print(f"bought {fed} Food {b} for {bought} and sold Work for {sold} net {net}")
 
     worked = 0
+    bought = 0
+    sold = 0
+    b = []
     for x in range(farmsize):
         if sut.price("Work") < sut.price("Food"):
-            print("buying work for the farm at", sut.price("Work"))
-            sut.buy(("Work", pop))
-            sut.sell(("Food", pop))
+            b.append(sut.buy(("Work", pop)))
+            if b[-1]:
+                sold += sut.sell(("Food", pop))
+                bought += b[-1]
             worked += 1
-        sut.provision()
+    net += sold - bought
+    print(f"bought {worked} Work for {bought} and sold the Food for {sold} net {sold-bought}")
     if worked == farmsize:
         farmsize += 1
     elif worked == 0:
         farmsize = max(1, farmsize - 1)
-    print("Farmsize is", farmsize, "popsize is", popsize)
+    print("Farmsize is", farmsize, "popsize is", popsize, "money change is", net )
 
     for x in funds.keys():
         funds[x].append(x.Funds)
@@ -237,16 +250,19 @@ for g in sut.Storage.keys():
     for x in funds.keys():
         plt.plot(amt[x][g], label=x.Name + " " + g)
 plt.ylabel("Amount")
+plt.grid()
 plt.legend()
 plt.show()
 for g in sut.Storage.keys():
     for x in funds.keys():
         plt.plot(price_dev[x][g], label=x.Name + " " + g, linewidth=4 if x == sut else 2)
 plt.ylabel("Price")
+plt.grid()
 plt.legend()
 plt.show()
 for x in funds.keys():
     plt.plot(funds[x], label=x.Name)
 plt.ylabel("Funds")
 plt.legend()
+plt.grid()
 plt.show()
