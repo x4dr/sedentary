@@ -144,7 +144,6 @@ class Market(object):
         fill_order = min(self.selectsell(offer),
                          key=lambda x: x.Price, default=Transaction.empty())
         if fill_order.Owner and (fill_order.Owner is not None):
-            # print(f"###{fill_order.Owner} selling {fill_order.Name} at {fill_order.Price} to {offer.Owner}")
             self.Sell_Offers.remove(fill_order)
             if fill_order.Callback(offer, fill_order.Price):
                 offer.Callback(fill_order, fill_order.Price)
@@ -192,7 +191,7 @@ class Market(object):
 
     def build_offers(self, good: str, amount: int = None, buy=True):
         if amount is None:
-            amount = self.Storage[good][0]
+            amount = self.Storage[good][0]            # use all
         return [self.build_offer(good, buy, a if buy else -a) for a in range(amount)]
 
     def build_offer(self, good: str, buy=True, adjustment=0):
@@ -239,7 +238,6 @@ farmsize = 5
 while i < 200:
     i += 1
     print("day", i)
-    # sut.provision()
     bought = 0
     sold = 0
     net = 0
@@ -250,8 +248,8 @@ while i < 200:
         pop.Storage["Food"][0] -= 1
         if pop.Storage["Food"][0] < 0:
             pop.Storage["Food"][0] = 0
-            popsize = popsize / 2
-            break
+            popsize -= 1
+            continue
         pop.Storage["Work"][0] += 1
     pop.Storage["Food"][1] = int(popsize * 2)
     pop.Storage["Work"][1] = int(popsize * 2)
@@ -260,7 +258,9 @@ while i < 200:
         if b:
             bought += b
             fed += 1
-    for selling_work in pop.build_offers("Work", buy=False):
+    swo=pop.build_offers("Work", buy=False)
+    print(swo)
+    for selling_work in swo:
         b = sut.sell(selling_work)
 
         if b:
@@ -270,7 +270,7 @@ while i < 200:
     popsize += (pop.Storage["Food"][0] / (pop.Storage["Food"][1] + 1) - 1)
 
     net = sold - bought
-    print(f"bought {fed} Food  for {bought} and sold {laboured} Work for {sold} net {net}")
+    print(f"bought {fed} Food for {bought} and sold {laboured} Work for {sold} net {net}")
 
     for x in range(int(farmsize)):
         emp.Storage["Work"][0] -= 1
@@ -336,25 +336,31 @@ def scragglyness(x):
     return int(result)
 
 
+graphstyle = ["r-", "b-", "y-", "ro", "bo", "yo"]
+graphind = -1
 for g in sut.Storage.keys():
     for x in funds.keys():
+        graphind += 1
         s = scragglyness(amt[x][g])
         print("amt", g, x, s)
-        plt.plot(list(smooth(amt[x][g], s)), label=x.Name + " " + g, linewidth=4 if x == sut else 2)
+        plt.plot(list(smooth(amt[x][g], s)), graphstyle[graphind], label=x.Name + " " + g, linewidth=4 if x == sut else 2)
 
 plt.ylabel("Amount")
 plt.grid()
 plt.legend()
-plt.show()
+plt.figure()
+graphstyle = ["r-", "b-", "y-", "ro", "bo", "yo"]
+graphind = -1
 for g in sut.Storage.keys():
     for x in funds.keys():
+        graphind += 1
         s = scragglyness(price_dev[x][g])
         print("pri", g, x, s)
-        plt.plot(list(smooth(price_dev[x][g], s)), label=x.Name + " " + g, linewidth=4 if x == sut else 2)
+        plt.plot(list(smooth(price_dev[x][g], s)), graphstyle[graphind], label=x.Name + " " + g, linewidth=4 if x == sut else 2)
 plt.ylabel("Price")
 plt.grid()
 plt.legend()
-plt.show()
+plt.figure()
 # '''
 for x in funds.keys():
     s = scragglyness(funds[x])
@@ -363,10 +369,10 @@ for x in funds.keys():
 plt.ylabel("Funds")
 plt.legend()
 plt.grid()
-plt.show()
+plt.figure()
 # '''
 for x in pop_dev.keys():
-    plt.plot(pop_dev[x], label=x)
+    plt.plot(pop_dev[x], "bo--", label=x)
     print("pop", x, scragglyness(pop_dev[x]))
 plt.ylabel("Size")
 plt.legend()
