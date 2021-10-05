@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Dict, Any, DefaultDict, Union, Tuple
+from typing import list, Dict, Any, DefaultDict, Union, Tuple
 
 
 class Process(object):
@@ -35,7 +35,7 @@ class Process(object):
 
 
 class Agent(object):
-    Processes: List[Process]
+    Processes: list[Process]
     Name: str
     Funds: int
     Status: DefaultDict[Any, int]
@@ -173,10 +173,10 @@ class Transaction(object):
 
 class Market(object):
     Historical: Dict[str, float]
-    Orders: List[Order]
-    Sell_Offers: List[Transaction]
+    Orders: list[Order]
+    Sell_Offers: list[Transaction]
 
-    Buy_Offers: List[Transaction]
+    Buy_Offers: list[Transaction]
 
     def __init__(self, name: str):
         self.Orders = []

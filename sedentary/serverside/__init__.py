@@ -1,3 +1,5 @@
-from sedentary.serverside.TimeOut import TimeOut
-from sedentary.serverside.Population import Population, take
-from sedentary.serverside.Module import Module
+from .TimeOut import TimeOut
+from .Population import Population, take
+from .Module import Module
+from .Storage import Storage
+from .Node import Node

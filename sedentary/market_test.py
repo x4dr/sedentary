@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import List, Union, Tuple, Any
+from typing import list, Union, Tuple, Any
 
 import matplotlib.pyplot as plt
 
@@ -25,11 +23,11 @@ class Transaction(object):
 
 
 class Market(object):
-    Outstanding_Offers: List[Transaction]
-    Sell_Offers: List[Transaction]
-    Buy_Offers: List[Transaction]
+    Outstanding_Offers: list[Transaction]
+    Sell_Offers: list[Transaction]
+    Buy_Offers: list[Transaction]
 
-    def __init__(self, name: str, sell_offers: List[Transaction], buy_offers: List[Transaction], storage: dict = None):
+    def __init__(self, name: str, sell_offers: list[Transaction], buy_offers: list[Transaction], storage: dict = None):
         self.Outstanding_Offers = []
         self.Name = name
         self.Sell_Offers = sell_offers
@@ -229,7 +227,7 @@ for x in funds.keys():
     price_dev[x] = {}
     for g in x.Storage.keys():
         amt[x][g] = [x.Storage[g][0]]
-        price_dev[x][g] = [x.price(g)]
+        price_dev[x][g] = [x.price_of_delta(g)]
 
 i = 0
 popsize = 5
@@ -310,7 +308,7 @@ while i < 200:
         funds[x].append(x.Funds)
         for g in sut.Storage.keys():
             amt[x][g].append(x.Storage[g][0])
-            price_dev[x][g].append(x.price(g))
+            price_dev[x][g].append(x.price_of_delta(g))
     pop_dev["Population"].append(popsize)
     pop_dev["Farmsize"].append(farmsize)
 

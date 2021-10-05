@@ -1,14 +1,14 @@
 import pathlib
 from random import random as nextfloat
 from collections import defaultdict
-from typing import Dict, Union, List, Optional
+from typing import Union, Optional
 
 
 class ItemCollection(defaultdict):
     storagemax: dict
 
-    def __init__(self, d: Union[None, Dict[str, int]] = None,
-                 storagemax: Union[None, Dict[str, int]] = None):
+    def __init__(self, d: Union[None, dict[str, int]] = None,
+                 storagemax: Union[None, dict[str, int]] = None):
         if d is not None:
             if "storagemax" in d.keys():
                 raise Exception("storagemax in key!")
@@ -93,8 +93,8 @@ class ItemCollection(defaultdict):
         :param req: ItemCollection of items and counts
         :return: empty ItemCollection if everything is met, otherwise the needed difference
         """
-        return ItemCollection({name: amount - self[name] for name, amount in req.items()
-                               if self[name] < amount}, req.storagemax)
+        return ItemCollection({itemname: amount - self[itemname] for itemname, amount in req.items()
+                               if self[itemname] < amount}, req.storagemax)
 
     def deduct(self, ded: 'ItemCollection', block: bool) -> 'ItemCollection':
         """
@@ -164,7 +164,7 @@ class Module:
     process: Optional['Process']
     inventory: ItemCollection
 
-    def __init__(self, name, space: Union[ItemCollection, Dict[str, int]] = None, process: 'Process' = None):
+    def __init__(self, name, space: Union[ItemCollection, dict[str, int]] = None, process: 'Process' = None):
         self.name = name
         theorymax = process.inputs + process.outputs
         self.inventory = ItemCollection(None, space)
@@ -197,7 +197,7 @@ class Module:
 
 
 class Node:
-    modules: List[Module]
+    modules: list[Module]
 
     def __init__(self, modules=None):
         self.modules = modules or []
@@ -264,7 +264,7 @@ class Process:
     time: int
     curtime: Union[None, int]
 
-    def __init__(self, name: str, inputs: Dict[str, int], outputs: Dict[str, int], time: int):
+    def __init__(self, name: str, inputs: dict[str, int], outputs: dict[str, int], time: int):
         self.name = name
         self.inputs = ItemCollection(inputs)
         self.outputs = ItemCollection(outputs)
@@ -311,7 +311,7 @@ class Process:
 
 city = Node()
 
-with pathlib.Path("~/sedentary.conf").expanduser().open() as f:
+with pathlib.Path("~/main_package.conf").expanduser().open() as f:
     for line in f.readlines():
         print(line)
         if not line.strip() or line.strip().startswith("#"):

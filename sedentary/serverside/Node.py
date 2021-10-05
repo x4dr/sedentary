@@ -1,58 +1,57 @@
-from typing import List
+from typing import Union
 
-from sedentary.serverside import Module, Population
+from sedentary.serverside import Module, Storage
 
 
 class Node:
-    def __init__(self, modules: List[Module] = None, pops: List[Population] = None, goods: dict = None):
+    def __init__(
+        self,
+        modules: list[Module] = None,
+        goods: Union[dict[str, Storage], list[str]] = None,
+    ):
         self.Modules = modules
-        self.Populations = pops
-        self.Goods = goods
+        if not goods:
+            self.Storage = {}
+        elif isinstance(goods, list):
+            self.Storage = {}
+            for name in goods:
+                self.Storage[name] = Storage(0, 1000)
+        else:
+            self.Storage = goods
 
-    def tick(self):
+    def price(self, ware: str) -> float:
+        return self.Storage[ware].price()
 
-        for m in self.Modules:
-            print("processing module {}".format(m.Name), self.Populations[0].Size, self.Populations[0].Counter)
-            workforce = {}
-            for p in self.Populations:
-                if p.Level == m.Level:
-                    draft = min(m.Size - workforce.get(p.Level, 0), p.Size - p.Counter)
-                    workforce[p.Level] = workforce.get(p.Level, 0) + draft
-                    p.Counter += draft
-            if sum(workforce.values()) == 0:
-                print("Aborting because no workforce found")
-            for k, v in m.tick(workforce, self.Goods).items():
-                if k in self.Goods.keys():
-                    self.Goods[k] += v
-                else:
-                    self.Goods[k] = v
-                print(f"Output {k}:{v}")
-            if sum(workforce.values()):
-                for p in reversed(self.Populations):
-                    if p.Level in [x for x in workforce.keys() if workforce[x]]:
-                        ret = min(p.Counter, workforce[p.Level])
-                        p.Counter -= ret
-                        workforce[p.Level] -= ret
-                        print(f"returned {ret} {p.Name}")
-        print(self.Goods)
-        for p in self.Populations:
-            p.Counter = 0
-            if p.Size != 0:
-                print("processing Population {}".format(p.Name))
-                p.tick(self.Goods)
-        if sum(p.Size for p in self.Populations) == 0:
-            print("DEATH")
-            return False
-        return True
+    def buy(self, ware: str, amount: int, commit=False):
+        return self.Storage[ware].buy(amount, commit)
+
+    def sell(self, ware: str, amount: int, commit=False):
+        return self.Storage[ware].sell(amount, commit)
+
+    def tick(self, equalize_money=True):
+        if equalize_money:
+            avgmoney = sum(x.Money for x in self.Modules) / len(self.Modules)
+            print("avgmoney", avgmoney)
+            for m in self.Modules:
+                m.Money = avgmoney
+                print("processing module {}".format(m.Name))
+                m.tick(self.Storage)
+                if m.Error:
+                    print(m.Status)
 
 
-fields = Module("Fields", 1, 100, {"Food": 10}, {"Food": 100})
-foraging = Module("Woods", 1, 1, {"Food": 0}, {"Food": 10})
-farmers = Population("Farmers", 50, 1, {"Food": 1})
-test = Node([fields, foraging], [farmers], {"Food": 4})
+if __name__ == "__main__":
 
-for i in range(10):
-    print("Step", i, "Population:", test.Populations[0].Size, test.Goods)
-    if not test.tick():
-        break
-print("Population:", test.Populations[0]._Size, test.Goods)
+    fields = Module(
+        "Fields", level=1, size=100, input_goods={"Food": 10}, output_goods={"Food": 100}
+    )
+    foraging = Module(
+        "Woods", level=1, size=100, input_goods={"Food": 0}, output_goods={"Food": 10}
+    )
+
+    test = Node([fields, foraging], {"Food": Storage(4, 1000)})
+
+    for i in range(10):
+        print("Step", i, test.Storage)
+        test.tick()
+    print(test.Storage)
