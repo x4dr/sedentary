@@ -41,7 +41,6 @@ class Node:
 
 
 if __name__ == "__main__":
-
     fields = Module(
         "Fields", level=1, size=100, input_goods={"Food": 10}, output_goods={"Food": 100}
     )
